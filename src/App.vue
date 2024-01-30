@@ -117,6 +117,7 @@ const onAccept = ()=>{
   wss.binaryType = 'arraybuffer'
   wss.onopen = ()=>{
     console.log('接收:连接成功')
+    wss.send(JSON.stringify([{"type":"setAutoGetImageTimerGap","gapTime":"1.0"}]))
   }
   wss.onmessage = ({data})=>{
     jmuxer.feed({
