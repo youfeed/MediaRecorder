@@ -1,17 +1,25 @@
 
 <template>
   <div>
-    <canvas ref="canvas"></canvas>
+    <button @click="onAccept">收听 单连接</button>
+    <img ref="image" src="https://th.bing.com/th?id=ODLS.3dc6f5f0-f66b-4880-893d-62d29cba6f62&w=32&h=32&qlt=93&pcl=fffffa&o=6&pid=1.2" style="background: #fff;width: 120px;"/>
+
+    <div class="phone">
+        <div v-for="(item,index) in images" :key="index">
+          <img :src="item.src" alt="" class="item">
+        </div>
+    </div>
+    <!-- <canvas ref="canvas"></canvas>
     <video ref="video" muted autoplay></video>
     <button @click="onAccept">收听 ws://localhost:9002/@100</button>
     <button @click="onScreenshot">截图下载</button>
     <video ref="player" muted autoplay></video>
-    <img ref="image" src="https://th.bing.com/th?id=ODLS.3dc6f5f0-f66b-4880-893d-62d29cba6f62&w=32&h=32&qlt=93&pcl=fffffa&o=6&pid=1.2" style="background: #f33;width: 120px;"/>
+    <img ref="image" src="https://th.bing.com/th?id=ODLS.3dc6f5f0-f66b-4880-893d-62d29cba6f62&w=32&h=32&qlt=93&pcl=fffffa&o=6&pid=1.2" style="background: #f33;width: 120px;"/> -->
   </div>
 </template>
 <script setup>
-import JMuxer  from 'jmuxer'
-import WSAvcPlayer from 'ws-avc-player'
+// import JMuxer  from 'jmuxer'
+// import WSAvcPlayer from 'ws-avc-player'
 // import './assets/YUVCanvas'
 // import './assets/Decoder'
 // import './assets/WebGLCanvas'
@@ -23,9 +31,10 @@ const state = reactive({
   player:null,image:null,video:null,canvas:null,ctx:null,wss:null,play:null,jmuxer:null,videoCanvas:null,
   server:`ws://localhost:9001/push/100`,
   // 接流地址
-  accept:`ws://localhost:9001/admin`,
+  // accept:`ws://localhost:9001/admin`,
+  accept:`wss://wss1.zzxxl.cn/admin`,
   // 图片池
-  image:[]
+  images:[],
 })
 // 
 onMounted(()=>{
@@ -56,22 +65,21 @@ onMounted(()=>{
   // play.attachMediaElement(player);
   // state.play = play
   //   
-  if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
-    navigator.mediaDevices.getDisplayMedia({ video: true }).then(stream => {
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-      state.video.srcObject = stream
-      state.ctx = state.canvas.getContext('2d')
-      onDraw();onSocket()
-      //
-      mediaRecorder.ondataavailable = ()=>{
-        onCapture()
-        console.log(1111)
-      }
-      mediaRecorder.start(200);
-    })
-    // 
-
-  }
+  // if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
+  //   navigator.mediaDevices.getDisplayMedia({ video: true }).then(stream => {
+  //     const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+  //     state.video.srcObject = stream
+  //     state.ctx = state.canvas.getContext('2d')
+  //     onDraw();onSocket()
+  //     //
+  //     mediaRecorder.ondataavailable = ()=>{
+  //       onCapture()
+  //       console.log(1111)
+  //     }
+  //     mediaRecorder.start(200);
+  //   })
+  //   // 
+  // }
 })
 // 绘制画布
 const onDraw = ()=>{
@@ -138,23 +146,43 @@ const onAccept = ()=>{
 // 展示图片
 // 前8字符
 const onImage = (data)=>{
-  let {image} = state
+  let {image,images} = state
   let slicedBuffer = data.slice(0,32)
   let decoder = new TextDecoder('utf-8');
   let uuid = decoder.decode(new Uint8Array(slicedBuffer),{stream: true}).split('$').join(''); // 
 
   console.log(slicedBuffer,uuid,image)
-  
   let buff = data.slice(32,-1)
   let blob = new Blob([buff],{type:'image/jpg'})
   let src = URL.createObjectURL(blob)
-  image.src = URL.createObjectURL(blob);
-  image.onload = ()=>{
-    URL.revokeObjectURL(image.src)
+  let find = images.find(item=>item.uuid === uuid)
+  if(find == undefined){
+    images.push({
+      uuid:uuid,
+      src:src
+    });
+  }else{
+    find.src = src
+    if(uuid == 139){
+      image.src = src
+    }
   }
+  image.srcObject = blob;
+  // if(images[uuid]){
+  //   images[uuid].src = src
+  // }else{
+  //   images[uuid] = {
+  //     src:src
+  //   }
+  // }
+  // console.log(src)
+  
+  // image.onload = ()=>{
+  //   URL.revokeObjectURL(image.src)
+  // }
   // image.src = imageUrl
 }
-const { image,video,canvas,ctx,player,videoCanvas } = toRefs(state)
+const { images,image,video,canvas,ctx,player,videoCanvas } = toRefs(state)
 </script>
 <style scoped>
 canvas,video{
@@ -165,5 +193,14 @@ canvas,video{
 }
 video{
   object-fit: cover;
+}
+.phone{
+  /* display: flex; */
+  display: grid;
+  grid-template-columns: repeat(6, 200px);
+  /* align-items: center; */
+}
+.item{
+  max-width: 100%;
 }
 </style>
