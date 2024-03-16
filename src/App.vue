@@ -6,6 +6,7 @@
     <button @click="onAccept">收听 ws://localhost:9002/@100</button>
     <button @click="onScreenshot">截图下载</button>
     <video ref="player" muted autoplay></video>
+    <img ref="image" src="https://th.bing.com/th?id=ODLS.3dc6f5f0-f66b-4880-893d-62d29cba6f62&w=32&h=32&qlt=93&pcl=fffffa&o=6&pid=1.2" style="background: #f33;width: 120px;"/>
   </div>
 </template>
 <script setup>
@@ -19,26 +20,30 @@ import WSAvcPlayer from 'ws-avc-player'
 import { ref, onMounted, reactive, toRefs } from 'vue'
 
 const state = reactive({
-  player:null,video:null,canvas:null,ctx:null,wss:null,play:null,jmuxer:null,videoCanvas:null,
-  server:`ws://localhost:9003/100`,accept:`ws://localhost:9003/@100`
+  player:null,image:null,video:null,canvas:null,ctx:null,wss:null,play:null,jmuxer:null,videoCanvas:null,
+  server:`ws://localhost:9001/push/100`,
+  // 接流地址
+  accept:`ws://localhost:9001/admin`,
+  // 图片池
+  image:[]
 })
 // 
 onMounted(()=>{
   let {player,accept} = state;
-  const jmuxer = new JMuxer({
-      node: player,
-      mode: 'video',
-      flushingTime:0,
-      maxDelay:0,
-      fps:25,
-      debug: true
-    });
-  state.jmuxer = jmuxer
-  onAccept()
-  const wsavc = new WSAvcPlayer({useWorker:true})
-  wsavc.connect(accept);
-  document.body.appendChild(wsavc.AvcPlayer.canvas)
-  console.log(wsavc)
+  // const jmuxer = new JMuxer({
+  //     node: player,
+  //     mode: 'video',
+  //     flushingTime:0,
+  //     maxDelay:0,
+  //     fps:25,
+  //     debug: true
+  //   });
+  // state.jmuxer = jmuxer;
+  // onAccept()
+  // const wsavc = new WSAvcPlayer({useWorker:true})
+  // wsavc.connect(accept);
+  // document.body.appendChild(wsavc.AvcPlayer.canvas)
+  // console.log(wsavc)
   // var play = mpegts.createPlayer({
   //     type: 'mpegts',  // could also be mpegts, m2ts, flv
   //     isLive: true,
@@ -120,16 +125,36 @@ const onAccept = ()=>{
     wss.send(JSON.stringify([{"type":"setAutoGetImageTimerGap","gapTime":"1.0"}]))
   }
   wss.onmessage = ({data})=>{
-    jmuxer.feed({
-      video:new Uint8Array(data)
-    })
-    console.log('接收:',data.byteLength)
+    onImage(data)
+    // jmuxer.feed({
+    //   video:new Uint8Array(data)
+    // })
+    console.log('接收:',data)
   }
   wss.onclose = ()=>{
     console.log('接收:断开连接')
   }
 }
-const { video,canvas,ctx,player,videoCanvas } = toRefs(state)
+// 展示图片
+// 前8字符
+const onImage = (data)=>{
+  let {image} = state
+  let slicedBuffer = data.slice(0,32)
+  let decoder = new TextDecoder('utf-8');
+  let uuid = decoder.decode(new Uint8Array(slicedBuffer),{stream: true}).split('$').join(''); // 
+
+  console.log(slicedBuffer,uuid,image)
+  
+  let buff = data.slice(32,-1)
+  let blob = new Blob([buff],{type:'image/jpg'})
+  let src = URL.createObjectURL(blob)
+  image.src = URL.createObjectURL(blob);
+  image.onload = ()=>{
+    URL.revokeObjectURL(image.src)
+  }
+  // image.src = imageUrl
+}
+const { image,video,canvas,ctx,player,videoCanvas } = toRefs(state)
 </script>
 <style scoped>
 canvas,video{
