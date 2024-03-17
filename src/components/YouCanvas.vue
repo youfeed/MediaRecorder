@@ -2,7 +2,7 @@
   <div style="border: 1px solid #000;">
     <canvas class="canvas" ref="canvas"></canvas>
     <img class="image" ref="image">
-    <div>{{uuid}} 缓冲:{{tasks.length}}</div>
+    <div class="cache">{{uuid}} 缓冲:{{tasks.length}}</div>
   </div>
 </template>
 
@@ -70,5 +70,8 @@ const {uuid,canvas,image,tasks} = toRefs(state)
 }
 .image{
   max-width: 100%;
+}
+.cache{
+  text-align: center;
 }
 </style>
