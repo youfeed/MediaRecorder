@@ -298,7 +298,7 @@ video{
 .phone{
   /* display: flex; */
   display: grid;
-  grid-template-columns: repeat(6, 200px);
+  grid-template-columns: repeat(8, 1fr);
   /* align-items: center; */
 }
 
