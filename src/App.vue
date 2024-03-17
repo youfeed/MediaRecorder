@@ -1,7 +1,10 @@
 
 <template>
   <div>
-    <button @click="onAccept" style="position: fixed;right: 10px;top: 10px;">收听 缓冲池({{ buffer.length }})</button>
+    <button @click="onAccept" style="position: fixed;right: 10px;top: 10px;">
+      <span v-for="item,index in speeds" :key="index">{{ (item / 1024).toFixed(2) }}kb/s </span>
+      收听 缓冲池({{ buffer.length }})
+    </button>
     <!-- <img ref="image" src="https://th.bing.com/th?id=ODLS.3dc6f5f0-f66b-4880-893d-62d29cba6f62&w=32&h=32&qlt=93&pcl=fffffa&o=6&pid=1.2" style="background: #fff;width: 120px;"/> -->
 
     <div class="phone">
@@ -41,11 +44,15 @@ const state = reactive({
   // 图片池
   images:[],
   // 缓冲池
-  buffer:buffeRef
+  buffer:buffeRef,
+  // 网速池
+  speed:0,
+  speeds:[0,0,0,0,0],
 })
 // 
 onMounted(()=>{
   let {player,accept} = state;
+  onSpeed();
   // console.log(itemRefs)
   // onDraw();
   // state.ctx = state.canvas.getContext('2d')
@@ -225,7 +232,7 @@ const onSocket = ()=>{
 }
 // 接收socket
 const onAccept = ()=>{
-  let {accept,jmuxer} = state
+  let {accept,speed} = state
   const wss = new WebSocket(accept)
   wss.binaryType = 'arraybuffer'
   wss.onopen = ()=>{
@@ -238,9 +245,7 @@ const onAccept = ()=>{
     }else{
       console.log('接收:',data)
     }
-    // jmuxer.feed({
-    //   video:new Uint8Array(data)
-    // })
+    state.speed = state.speed + data.byteLength || 0
   }
   wss.onclose = ()=>{
     console.log('接收:断开连接')
@@ -277,7 +282,16 @@ const onImage = (data)=>{
     // buffer.push({uuid:uuid,blob:blob})
   }
 }
-const { images,image,video,canvas,ctx,player,videoCanvas,buffer } = toRefs(state)
+// 网速统计
+const onSpeed = ()=>{
+  let {speed,speeds} = state
+  // console.log('speed:',speed,speeds)
+  state.speeds.push(speed);state.speeds.shift();
+  setTimeout(()=>{
+    onSpeed()
+  },1000)
+}
+const { images,image,video,canvas,ctx,player,speeds,buffer } = toRefs(state)
 </script>
 <style scoped>
 /* .canvas{
