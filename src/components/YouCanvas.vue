@@ -2,21 +2,25 @@
   <div style="border: 1px solid #000;">
     <canvas class="canvas" ref="canvas"></canvas>
     <img class="image" ref="image">
+    <div>{{uuid}} 缓冲:{{tasks.length}}</div>
   </div>
 </template>
 
 <script setup>
 import { onMounted,reactive, toRefs } from 'vue';
 const props = defineProps({
+  uuid: String,
   task: Array,
 });
 const state = reactive({
+  uuid:null,
   image:null,
   canvas:null,
   ctx:null,
   tasks:[]
 })
 onMounted(()=>{
+  state.uuid = props.uuid;
   state.tasks = props.task;
   state.ctx = state.canvas.getContext('2d');
   // console.log(1000000000000000000,state.tasks,props.task)
@@ -56,7 +60,7 @@ const onDraw = ()=>{
   }
   
 };
-const {canvas,image} = toRefs(state)
+const {uuid,canvas,image,tasks} = toRefs(state)
 </script>
 
 <style scoped>
