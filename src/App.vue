@@ -3,7 +3,7 @@
   <div>
     <button @click="onAccept" style="position: fixed;right: 10px;top: 10px;">
       <span v-for="item,index in speeds" :key="index">{{ (item / 1024).toFixed(2) }}kb/s </span>
-      收听 缓冲池({{ buffer.length }})
+      收听 设备池({{ images.length }})
     </button>
     <!-- <img ref="image" src="https://th.bing.com/th?id=ODLS.3dc6f5f0-f66b-4880-893d-62d29cba6f62&w=32&h=32&qlt=93&pcl=fffffa&o=6&pid=1.2" style="background: #fff;width: 120px;"/> -->
 
